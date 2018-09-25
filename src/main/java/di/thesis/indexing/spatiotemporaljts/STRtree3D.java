@@ -309,7 +309,7 @@ public class STRtree3D extends STRtree {
             return null;
         } else {
             ArrayList matches = new ArrayList();
-            if (getIntersectsOp().intersects(root.getBounds(), searchBounds)) {
+            if (root.getBounds().intersects(searchBounds)) {
 
                 Stack stack = new Stack();
 
