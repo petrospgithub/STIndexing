@@ -451,4 +451,6 @@ public class STRtree3D extends STRtree {
     }
 
 
+    //todo add knn
+
 }
