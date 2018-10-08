@@ -16,4 +16,11 @@ public class Intersects {
                 b_y >= a_miny && b_y <= a_maxy &&
                 b_t >= a_mint && b_t <= a_maxt;
     }
+
+    public static boolean spatial(double a_minx, double a_maxx, double a_miny, double a_maxy,
+                                double b_x, double b_y) {
+
+        return b_x >= a_minx && b_x<= a_maxx &&
+                b_y >= a_miny && b_y <= a_maxy ;
+    }
 }

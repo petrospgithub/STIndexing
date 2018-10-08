@@ -1,6 +1,7 @@
 package di.thesis.indexing.types;
 
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Polygon;
 import org.geotools.geometry.jts.JTS;
 import di.thesis.indexing.stOperators.Contains;
 import di.thesis.indexing.stOperators.Intersects;
@@ -82,6 +83,10 @@ public class EnvelopeST extends GidEnvelope implements Serializable {
 
     public String wkt(){
         return JTS.toGeometry(new Envelope(this.getMinX(),this.getMaxX(), this.getMinY(), this.getMaxY())).toText();
+    }
+
+    public Polygon jtsGeom(){
+        return JTS.toGeometry(new Envelope(this.getMinX(),this.getMaxX(), this.getMinY(), this.getMaxY()));
     }
 
     public boolean intersects(EnvelopeST env) {

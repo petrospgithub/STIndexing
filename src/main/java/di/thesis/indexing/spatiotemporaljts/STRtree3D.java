@@ -1,11 +1,20 @@
 package di.thesis.indexing.spatiotemporaljts;
 
-import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.*;
 import com.vividsolutions.jts.util.Assert;
+import di.thesis.indexing.distance.BoxLineDist;
+import di.thesis.indexing.distance.DTW;
+import di.thesis.indexing.distance.LCSS;
+import di.thesis.indexing.stOperators.Intersects;
 import di.thesis.indexing.types.EnvelopeST;
 import di.thesis.indexing.types.PointST;
 import di.thesis.indexing.types.STItemBoundable;
+import di.thesis.indexing.types.Triplet;
+import di.thesis.indexing.utils.STtoS;
+import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.SettableStructObjectInspector;
 
 import java.util.*;
 
@@ -303,6 +312,198 @@ public class STRtree3D extends STRtree {
     TODO query
      */
 
+    //add knn for EnvelopeST, mean
+
+    public List knn(PointST[] traj, double threshold, String similarity_function, int k, int minT_tolerance, int maxT_tolerance, String pointDistFunc, double similarityTolerance, int w, double eps, int delta) throws Exception {
+        if (root.isEmpty()) {
+            return null;
+        } else {
+            ArrayList<Triplet> matches = new ArrayList<Triplet>();
+
+            long traj_start_t=traj[0].getTimestamp();
+            long traj_end_t=traj[traj.length-1].getTimestamp();
+
+            long bound_min_t=root.getBounds().getMinT() - minT_tolerance;
+            long bound_max_t=root.getBounds().getMaxT() + maxT_tolerance;
+
+            if (bound_min_t<=traj_end_t && bound_max_t >= traj_start_t) {
+
+                Stack stack = new Stack();
+
+                stack.push(root);
+
+                while (!stack.empty()) {
+                    STRtree3DNode node = (STRtree3DNode) stack.pop();
+                    for (Iterator i = node.getChildBoundables().iterator(); i.hasNext(); ) {
+                        Boundable childBoundable = (Boundable) i.next();
+
+                        if( !( ((EnvelopeST)childBoundable.getBounds()).getMinT() <= traj_end_t &&
+                                ((EnvelopeST)childBoundable.getBounds()).getMaxT() >=  traj_start_t) ) {
+                            continue;
+                        }
+
+                        if (childBoundable instanceof STRtree3DNode) {
+                            stack.push(childBoundable);
+                        } else if (childBoundable instanceof STItemBoundable) {
+
+                            EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
+                            PointST[] trajectory=((STItemBoundable) childBoundable).getTraj();
+
+                            long item_minT=envelopeST.getMinT() - minT_tolerance;
+                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+
+                            if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
+                                //an intersects add kai min dist 0
+                                // alliws an mindist mikrotero apo threshold
+                                double dist_result=Double.MAX_VALUE;
+
+                                for (int j=0; j<traj.length; j++) {
+
+                                    if (Intersects.spatial(envelopeST.getMinX(), envelopeST.getMaxX(), envelopeST.getMinY(), envelopeST.getMaxY(),
+                                            traj[j].getLongitude(), traj[j].getLatitude())
+                                    ) {
+                                        dist_result=0;
+                                        break;
+                                    }
+
+                                }
+
+                                if (dist_result>0) {
+                                    LineString line = STtoS.trajectory_transformation(traj);
+                                    Polygon poly = envelopeST.jtsGeom();
+                                    dist_result= BoxLineDist.minDist(poly,line);
+                                }
+
+//TODO check!!!
+                                if (dist_result<=threshold) {
+                                   // matches.add(envelopeST.getGid());
+
+                                    Triplet triplet=new Triplet(envelopeST.getGid(), traj);
+                                    matches.add(triplet);
+                                }
+
+                            }
+
+                            //todo add min dist and...
+
+                        } else {
+                            Assert.shouldNeverReachHere();
+                        }
+                    }
+                }
+            }
+
+            if (similarity_function=="DTW") {
+                DTW dtw = new DTW(traj);
+
+                for (int i=0; i<matches.size(); i++) {
+                    matches.get(i).setDistance(dtw.similarity(matches.get(i).getTrajectory(), w, pointDistFunc, similarityTolerance, 0,0));
+                }
+
+
+            } else if (similarity_function=="LCSS") {
+                LCSS lcss= new LCSS(traj);
+
+                for (int i=0; i<matches.size(); i++) {
+                    matches.get(i).setDistance(lcss.similarity(matches.get(i).getTrajectory(), pointDistFunc, eps, delta));
+                }
+
+            } else {
+                Assert.shouldNeverReachHere();
+            }
+
+            matches.sort(Comparator.comparing(Triplet::getDistance));
+
+            return matches.subList(0,k+1);
+        }
+    }
+
+    public List knn(Object trajectory, ListObjectInspector listOI, SettableStructObjectInspector structOI, double threshold, int minT_tolerance, int maxT_tolerance) {
+        if (root.isEmpty()) {
+            return null;
+        } else {
+            ArrayList matches = new ArrayList();
+
+            int last = listOI.getListLength(trajectory)-1;
+            int length = listOI.getListLength(trajectory);
+
+            long traj_start_t=(long) (structOI.getStructFieldData(listOI.getListElement(trajectory, 0), structOI.getStructFieldRef("timestamp")));
+            long traj_end_t=(long) (structOI.getStructFieldData(listOI.getListElement(trajectory, last), structOI.getStructFieldRef("timestamp")));
+
+            long bound_min_t=root.getBounds().getMinT() - minT_tolerance;
+            long bound_max_t=root.getBounds().getMaxT() + maxT_tolerance;
+
+            if (bound_min_t<=traj_end_t && bound_max_t >= traj_start_t) {
+
+                Stack stack = new Stack();
+
+                stack.push(root);
+
+                while (!stack.empty()) {
+                    STRtree3DNode node = (STRtree3DNode) stack.pop();
+                    for (Iterator i = node.getChildBoundables().iterator(); i.hasNext(); ) {
+                        Boundable childBoundable = (Boundable) i.next();
+
+                        if( !( ((EnvelopeST)childBoundable.getBounds()).getMinT() <= traj_end_t &&
+                                ((EnvelopeST)childBoundable.getBounds()).getMaxT() >=  traj_start_t) ) {
+                            continue;
+                        }
+
+                        if (childBoundable instanceof STRtree3DNode) {
+                            stack.push(childBoundable);
+                        } else if (childBoundable instanceof STItemBoundable) {
+
+                            EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
+
+                            long item_minT=envelopeST.getMinT() - minT_tolerance;
+                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+
+                            if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
+                                //an intersects add kai min dist 0
+                                // alliws an mindist mikrotero apo threshold
+                                double dist_result=Double.MAX_VALUE;
+
+                                double lon;
+                                double lat;
+
+                                for (int j=0; j<length; j++) {
+
+                                    lon  = (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("longitude")));
+                                    lat= (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("latitude")));
+
+                                    if (Intersects.spatial(envelopeST.getMinX(), envelopeST.getMaxX(), envelopeST.getMinY(), envelopeST.getMaxY(),
+                                            lon, lat)
+                                    ) {
+                                        dist_result=0;
+                                        break;
+                                    }
+
+                                }
+
+                                if (dist_result>0) {
+                                    LineString line = STtoS.trajectory_transformation(trajectory,listOI,structOI);
+                                    Polygon poly = envelopeST.jtsGeom();
+                                    dist_result= BoxLineDist.minDist(poly,line);
+                                }
+
+//TODO check!!!
+                                if (dist_result<=threshold) {
+                                    matches.add(envelopeST.getGid());
+                                }
+
+                            }
+
+                            //todo add min dist and...
+
+                        } else {
+                            Assert.shouldNeverReachHere();
+                        }
+                    }
+                }
+            }
+            return matches; //return possible id for matches!!!
+        }
+    }
 
     public List queryID(EnvelopeST searchBounds) {
         if (root.isEmpty()) {
@@ -388,12 +589,13 @@ public class STRtree3D extends STRtree {
         return partitions;
     }
 
+    /*
     //check implementation stark vs jtplus
     @Override
     public Object nearestNeighbour(Envelope env, Object item, ItemDistance itemDist) {
         return super.nearestNeighbour(env, item, itemDist);
     }
-
+*/
     /*
     @Override
     public Object[] kNearestNeighbour(Envelope env, Object item, ItemDistance itemDist, int k) {
@@ -452,5 +654,6 @@ public class STRtree3D extends STRtree {
 
 
     //todo add knn
+
 
 }
