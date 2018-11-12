@@ -15,6 +15,8 @@ import di.thesis.indexing.types.Triplet;
 import di.thesis.indexing.utils.STtoS;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.SettableStructObjectInspector;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.LongWritable;
 
 import java.util.*;
 
@@ -427,8 +429,8 @@ public class STRtree3D extends STRtree {
             int last = listOI.getListLength(trajectory)-1;
             int length = listOI.getListLength(trajectory);
 
-            long traj_start_t=(long) (structOI.getStructFieldData(listOI.getListElement(trajectory, 0), structOI.getStructFieldRef("timestamp")));
-            long traj_end_t=(long) (structOI.getStructFieldData(listOI.getListElement(trajectory, last), structOI.getStructFieldRef("timestamp")));
+            long traj_start_t=((LongWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, 0), structOI.getStructFieldRef("timestamp")))).get();
+            long traj_end_t=((LongWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, last), structOI.getStructFieldRef("timestamp")))).get();
 
             long bound_min_t=root.getBounds().getMinT() - minT_tolerance;
             long bound_max_t=root.getBounds().getMaxT() + maxT_tolerance;
@@ -468,8 +470,8 @@ public class STRtree3D extends STRtree {
 
                                 for (int j=0; j<length; j++) {
 
-                                    lon  = (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("longitude")));
-                                    lat= (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("latitude")));
+                                    lon  = ((DoubleWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("longitude")))).get();
+                                    lat= ((DoubleWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, j), structOI.getStructFieldRef("latitude")))).get();
 
                                     if (Intersects.spatial(envelopeST.getMinX(), envelopeST.getMaxX(), envelopeST.getMinY(), envelopeST.getMaxY(),
                                             lon, lat)

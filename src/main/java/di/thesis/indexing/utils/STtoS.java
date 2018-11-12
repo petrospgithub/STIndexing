@@ -8,6 +8,7 @@ import com.vividsolutions.jts.geom.LineString;
 import di.thesis.indexing.types.PointST;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.SettableStructObjectInspector;
+import org.apache.hadoop.io.DoubleWritable;
 
 public class STtoS {
 
@@ -41,8 +42,8 @@ public class STtoS {
 
         while (i<length) {
 
-            lon  = (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, i), structOI.getStructFieldRef("longitude")));
-            lat= (double) (structOI.getStructFieldData(listOI.getListElement(trajectory, i), structOI.getStructFieldRef("latitude")));
+            lon  = ((DoubleWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, i), structOI.getStructFieldRef("longitude")))).get();
+            lat= ((DoubleWritable) (structOI.getStructFieldData(listOI.getListElement(trajectory, i), structOI.getStructFieldRef("latitude")))).get();
 
             coord[i]=new Coordinate(lon, lat);
             i++;
