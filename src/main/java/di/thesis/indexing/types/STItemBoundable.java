@@ -52,11 +52,7 @@ public class STItemBoundable extends ItemBoundable{
             sumt=sumt+traj[i].getTimestamp();
             i=i+1;
         }
-        PointST pointst=new PointST();
-
-        pointst.setLongitude(sumx/traj.length);
-        pointst.setLatitude(sumy/traj.length);
-        pointst.setTimestamp(sumt/traj.length);
+        PointST pointst=new PointST(sumx/traj.length,sumy/traj.length, sumt/traj.length );
 
         return pointst;
     }
