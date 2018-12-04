@@ -78,7 +78,7 @@ public class LCSS {
         int a = trajectoryA_length;
         int b = trajectoryB_length;
 
-        //ArrayList<PointST> common=new ArrayList<PointST>();
+        //ArrayList<di.thesis.indexing.type.PointST> common=new ArrayList<di.thesis.indexing.type.PointST>();
         while (a!=0 && b!=0) {
 
             trajA_longitude = trajA[a-1].getLongitude();

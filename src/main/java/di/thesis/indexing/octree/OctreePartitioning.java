@@ -56,7 +56,7 @@ public class OctreePartitioning implements Serializable {
         return uniqueIdList;
     }
 /*
-    public Tuple2<Object, EnvelopeST> Partitioning(PointST p) {
+    public Tuple2<Object, EnvelopeST> Partitioning(di.thesis.indexing.type.PointST p) {
         EnvelopeST env=partitionTree.getPartitionNode(p);
         if (env!=null) {
 

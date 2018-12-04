@@ -43,11 +43,7 @@ public class StandardOcTree /*extends StandardQuadTree*/ {
         //System.out.println(newLevel);
         //System.exit(0);
 
-        PointST center = new PointST();
-
-        center.setLongitude( (this.myzone.getMaxX()+this.myzone.getMinX())/2 );
-        center.setLatitude( (this.myzone.getMaxY()+this.myzone.getMinY())/2 );
-        center.setTimestamp( ((this.myzone.getMaxT()+this.myzone.getMinT())/2)+1 ) ;
+        PointST center = new PointST((this.myzone.getMaxX()+this.myzone.getMinX())/2, (this.myzone.getMaxY()+this.myzone.getMinY())/2, ((this.myzone.getMaxT()+this.myzone.getMinT())/2)+1);
 
         regions[0] = new StandardOcTree(
                 new EnvelopeST(
@@ -291,7 +287,7 @@ public class StandardOcTree /*extends StandardQuadTree*/ {
     }
 
 /*
-    public EnvelopeST getPartitionNode(PointST p)
+    public EnvelopeST getPartitionNode(di.thesis.indexing.type.PointST p)
     {
         //System.out.println(Arrays.toString(regions));
         if (regions!= null) {

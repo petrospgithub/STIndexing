@@ -1,5 +1,5 @@
 package di.thesis.indexing.types;
-
+/*
 import java.io.Serializable;
 
 public class PointST implements Serializable {
@@ -57,3 +57,4 @@ public class PointST implements Serializable {
         return xcoord+ycoord+tcoord;
     }
 }
+*/
