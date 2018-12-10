@@ -316,7 +316,7 @@ public class STRtree3D extends STRtree {
 
     //add knn for EnvelopeST, mean
 
-    public List knn(PointST[] traj, double threshold, String similarity_function, int k, int minT_tolerance, int maxT_tolerance, String pointDistFunc, double similarityTolerance, int w, double eps, int delta) throws Exception {
+    public List knn(PointST[] traj, double threshold, String similarity_function, int k, int minT_tolerance, int maxT_tolerance, String pointDistFunc, int w, double eps, int delta) throws Exception {
         if (root.isEmpty()) {
             return null;
         } else {
@@ -399,7 +399,7 @@ public class STRtree3D extends STRtree {
                 DTW dtw = new DTW(traj);
 
                 for (int i=0; i<matches.size(); i++) {
-                    matches.get(i).setDistance(dtw.similarity(matches.get(i).getTrajectory(), w, pointDistFunc, similarityTolerance, 0,0));
+                    matches.get(i).setDistance(dtw.similarity(matches.get(i).getTrajectory(), w, pointDistFunc, 0,0));
                 }
 
 
@@ -496,6 +496,88 @@ public class STRtree3D extends STRtree {
                             }
 
                             //todo add min dist and...
+
+                        } else {
+                            Assert.shouldNeverReachHere();
+                        }
+                    }
+                }
+            }
+            return matches; //return possible id for matches!!!
+        }
+    }
+
+    public List knn(PointST[] trajectory, double threshold, int minT_tolerance, int maxT_tolerance) {
+        if (root.isEmpty()) {
+            return null;
+        } else {
+            ArrayList matches = new ArrayList();
+
+            int length = trajectory.length;
+
+            long traj_start_t=trajectory[0].getTimestamp();
+            long traj_end_t=trajectory[length-1].getTimestamp();
+
+            long bound_min_t=root.getBounds().getMinT() - minT_tolerance;
+            long bound_max_t=root.getBounds().getMaxT() + maxT_tolerance;
+
+            if (bound_min_t<=traj_end_t && bound_max_t >= traj_start_t) {
+
+                Stack stack = new Stack();
+
+                stack.push(root);
+
+                while (!stack.empty()) {
+                    STRtree3DNode node = (STRtree3DNode) stack.pop();
+                    for (Iterator i = node.getChildBoundables().iterator(); i.hasNext(); ) {
+                        Boundable childBoundable = (Boundable) i.next();
+
+                        if( !( ((EnvelopeST)childBoundable.getBounds()).getMinT() <= traj_end_t &&
+                                ((EnvelopeST)childBoundable.getBounds()).getMaxT() >=  traj_start_t) ) {
+                            continue;
+                        }
+
+                        if (childBoundable instanceof STRtree3DNode) {
+                            stack.push(childBoundable);
+                        } else if (childBoundable instanceof STItemBoundable) {
+
+                            EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
+
+                            long item_minT=envelopeST.getMinT() - minT_tolerance;
+                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+
+                            if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
+                                //an intersects add kai min dist 0
+                                // alliws an mindist mikrotero apo threshold
+                                double dist_result=Double.MAX_VALUE;
+
+                                double lon;
+                                double lat;
+
+                                for (int j=0; j<length; j++) {
+
+                                    lon=trajectory[j].getLongitude();
+                                    lat=trajectory[j].getLongitude();
+
+                                    if (Intersects.spatial(envelopeST.getMinX(), envelopeST.getMaxX(), envelopeST.getMinY(), envelopeST.getMaxY(),
+                                            lon, lat)
+                                    ) {
+                                        dist_result=0;
+                                        break;
+                                    }
+
+                                }
+
+                                if (dist_result>0) {
+                                    LineString line = STtoS.trajectory_transformation(trajectory);
+                                    Polygon poly = envelopeST.jtsGeom();
+                                    dist_result= BoxLineDist.minDist(poly,line);
+                                }
+
+                                if (dist_result<=threshold) {
+                                    matches.add(envelopeST.getGid());
+                                }
+                            }
 
                         } else {
                             Assert.shouldNeverReachHere();

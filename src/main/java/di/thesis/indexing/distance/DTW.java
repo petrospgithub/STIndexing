@@ -11,7 +11,7 @@ public class DTW {
         this.trajA = trajA;
     }
 
-    public double similarity(PointST[] trajB, int w, String f, double d, int minTSext, int maxTSext) throws Exception {
+    public double similarity(PointST[] trajB, int w, String f, int minTSext, int maxTSext) throws Exception {
 
         int trajectoryA_length=trajA.length;
 
@@ -42,26 +42,22 @@ public class DTW {
         if (minTSext<0 || maxTSext<0) {
             double calc=calculate(trajectoryA_length, trajectoryB_length, trajA, trajB, func, w);
 
-            double traj_dist=(calc / (double)Math.min(trajectoryA_length,trajectoryB_length));
-
-            if (traj_dist<=d) {
-                return traj_dist;
-            } else {
-                return -1;
-            }
+            //if (traj_dist<=d) {
+                return (calc / (double)Math.min(trajectoryA_length,trajectoryB_length));
+            //} else {
+              //  return -1;
+           // }
 
         } else if ( (min_tsA-minTSext)<=max_tsB && min_tsB<=(max_tsA+maxTSext) ) {
             double calc=calculate(trajectoryA_length, trajectoryB_length, trajA, trajB, func, w);
 
-            double traj_dist=(calc / (double)Math.min(trajectoryA_length,trajectoryB_length));
-
-            if (traj_dist<=d) {
-                return traj_dist;
-            } else {
-                return -1;
-            }
+            //  if (traj_dist<=d) {
+                return (calc / (double)Math.min(trajectoryA_length,trajectoryB_length));
+            //} else {
+              //  return -1;
+            //}
         } else {
-            return -1;
+            return Double.MAX_VALUE;
         }
 
        // return 0.0;
