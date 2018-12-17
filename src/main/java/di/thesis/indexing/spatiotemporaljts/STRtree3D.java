@@ -17,6 +17,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.SettableStructObjectInspector;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
+import scala.Tuple2;
 
 import java.util.*;
 
@@ -141,6 +142,11 @@ public class STRtree3D extends STRtree {
 
     public void insert(EnvelopeST bounds, EnvelopeST item) {
         //System.out.println("insert(EnvelopeST bounds, EnvelopeST item)");
+        Assert.isTrue(!built, "Cannot insert items into an STR packed R-tree after it has been built.");
+        itemBoundables.add(new STItemBoundable(bounds, item));
+    }
+
+    public void insert(EnvelopeST bounds, Object item) {
         Assert.isTrue(!built, "Cannot insert items into an STR packed R-tree after it has been built.");
         itemBoundables.add(new STItemBoundable(bounds, item));
     }
@@ -316,7 +322,7 @@ public class STRtree3D extends STRtree {
 
     //add knn for EnvelopeST, mean
 
-    public List knn(PointST[] traj, double threshold, String similarity_function, int k, int minT_tolerance, int maxT_tolerance, String pointDistFunc, int w, double eps, int delta) throws Exception {
+    public List<Triplet> knn(PointST[] traj, double threshold, String similarity_function, int k, int minT_tolerance, int maxT_tolerance, String pointDistFunc, int w, double eps, int delta) throws Exception {
         if (root.isEmpty()) {
             return null;
         } else {
@@ -349,7 +355,7 @@ public class STRtree3D extends STRtree {
                         } else if (childBoundable instanceof STItemBoundable) {
 
                             EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
-                            PointST[] trajectory=((STItemBoundable) childBoundable).getTraj();
+                            PointST[] trajectoryB=((STItemBoundable) childBoundable).getTraj();
 
                             long item_minT=envelopeST.getMinT() - minT_tolerance;
                             long item_maxT=envelopeST.getMinT() + maxT_tolerance;
@@ -379,8 +385,8 @@ public class STRtree3D extends STRtree {
 //TODO check!!!
                                 if (dist_result<=threshold) {
                                    // matches.add(envelopeST.getGid());
-
-                                    Triplet triplet=new Triplet(envelopeST.getGid(), traj);
+//todo!!!
+                                    Triplet triplet=new Triplet(envelopeST.getGid(), trajectoryB);
                                     matches.add(triplet);
                                 }
 
@@ -399,7 +405,7 @@ public class STRtree3D extends STRtree {
                 DTW dtw = new DTW(traj);
 
                 for (int i=0; i<matches.size(); i++) {
-                    matches.get(i).setDistance(dtw.similarity(matches.get(i).getTrajectory(), w, pointDistFunc, 0,0));
+                    matches.get(i).setDistance(dtw.similarity(matches.get(i).getTrajectory(), w, pointDistFunc, minT_tolerance,maxT_tolerance));
                 }
 
 
@@ -619,6 +625,51 @@ public class STRtree3D extends STRtree {
                                 matches.add(envelope.getGid());
                             }
 
+                        } else {
+                            Assert.shouldNeverReachHere();
+                        }
+                    }
+                }
+            }
+            //todo kati epipleon gia na elegxw to trajectory!!!
+            return matches;
+        }
+
+    }
+
+    public List queryIDTrajectory(EnvelopeST searchBounds) {
+        if (root.isEmpty()) {
+            return null;
+        } else {
+            ArrayList matches = new ArrayList();
+            if (root.getBounds().intersects(searchBounds)) {
+
+                Stack stack = new Stack();
+
+                stack.push(root);
+
+                while (!stack.empty()) {
+                    STRtree3DNode node = (STRtree3DNode) stack.pop();
+                    for (Iterator i = node.getChildBoundables().iterator(); i.hasNext(); ) {
+                        Boundable childBoundable = (Boundable) i.next();
+
+                        if( !((EnvelopeST)childBoundable.getBounds()).intersects(searchBounds) ) {
+                            continue;
+                        }
+
+                        if (childBoundable instanceof STRtree3DNode) {
+                            stack.push(childBoundable);
+                        } else if (childBoundable instanceof STItemBoundable) {
+                            //todo mono an intersects add
+                            PointST[] traj = ((STItemBoundable) childBoundable).getTraj();
+                            long rowId = ((EnvelopeST) childBoundable.getBounds()).getGid();
+
+                            for (int iji=0; iji<traj.length; iji++) {
+                                if (searchBounds.intersects(traj[iji])) {
+                                    matches.add(new Tuple2<Long, PointST[]>(rowId, traj));
+                                    break;
+                                }
+                            }
                         } else {
                             Assert.shouldNeverReachHere();
                         }
