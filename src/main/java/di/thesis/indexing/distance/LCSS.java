@@ -85,9 +85,9 @@ public class LCSS {
             trajA_latitude = trajA[a-1].getLatitude();
             trajA_timestamp = trajA[a-1].getTimestamp();
 
-            trajB_longitude = trajA[b-1].getLongitude();
-            trajB_latitude = trajA[b-1].getLatitude();
-            trajB_timestamp = trajA[b-1].getTimestamp();
+            trajB_longitude = trajB[b-1].getLongitude();
+            trajB_latitude = trajB[b-1].getLatitude();
+            trajB_timestamp = trajB[b-1].getTimestamp();
 
             distance=func.calculate(trajA_latitude, trajA_longitude, trajB_latitude, trajB_longitude);
 

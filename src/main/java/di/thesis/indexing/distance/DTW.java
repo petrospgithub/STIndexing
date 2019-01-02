@@ -34,7 +34,7 @@ public class DTW {
         long max_tsA = trajA[trajectoryA_length-1].getTimestamp();
 
         long min_tsB = trajB[0].getTimestamp();
-        long max_tsB = trajB[trajectoryA_length-1].getTimestamp();
+        long max_tsB = trajB[trajectoryB_length-1].getTimestamp();
 
         //an einai arnhtika kai ta 2 sigoura DTW
         //an einai 8etika kai ta 2 koitaw an kanoun overlap
@@ -82,6 +82,7 @@ public class DTW {
         trajB_latitude=trajB[0].getLatitude();
 
         DTW_distance_matrix[0][0]=func.calculate(trajA_latitude, trajA_longitude, trajB_latitude, trajB_longitude);
+
         for (int i = 0; i < trajectoryB_length; i++) {
 
             trajB_longitude=trajB[i].getLongitude();
@@ -98,10 +99,11 @@ public class DTW {
             trajA_longitude=trajA[i].getLongitude();
             trajA_latitude=trajA[i].getLatitude();
 
-            DTW_distance_matrix[i][0] = DTW_distance_matrix[0][0]=func.calculate(trajA_latitude, trajA_longitude, trajB_latitude, trajB_longitude);
+            DTW_distance_matrix[i][0] = func.calculate(trajA_latitude, trajA_longitude, trajB_latitude, trajB_longitude);
         }
 
         w = Math.max(w, Math.abs(trajectoryA_length-trajectoryB_length)); // adapt window size (*)
+
         for (int i = 1; i < trajectoryA_length; i++) {
 
             trajA_longitude=trajA[i-1].getLongitude();
