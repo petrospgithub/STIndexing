@@ -358,7 +358,7 @@ public class STRtree3D extends STRtree {
                             PointST[] trajectoryB=((STItemBoundable) childBoundable).getTraj();
 
                             long item_minT=envelopeST.getMinT() - minT_tolerance;
-                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+                            long item_maxT=envelopeST.getMaxT() + maxT_tolerance;
 
                             if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
                                 //an intersects add kai min dist 0
@@ -464,7 +464,7 @@ public class STRtree3D extends STRtree {
                             EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
 
                             long item_minT=envelopeST.getMinT() - minT_tolerance;
-                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+                            long item_maxT=envelopeST.getMaxT() + maxT_tolerance;
 
                             if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
                                 //an intersects add kai min dist 0
@@ -549,12 +549,15 @@ public class STRtree3D extends STRtree {
 
                             EnvelopeST envelopeST=((EnvelopeST) childBoundable.getBounds());
 
+                            //System.out.println(envelopeST);
+
                             long item_minT=envelopeST.getMinT() - minT_tolerance;
-                            long item_maxT=envelopeST.getMinT() + maxT_tolerance;
+                            long item_maxT=envelopeST.getMaxT() + maxT_tolerance;
 
                             if (item_minT<=traj_end_t && item_maxT >= traj_start_t) {
                                 //an intersects add kai min dist 0
                                 // alliws an mindist mikrotero apo threshold
+
                                 double dist_result=Double.MAX_VALUE;
 
                                 double lon;
@@ -563,7 +566,7 @@ public class STRtree3D extends STRtree {
                                 for (int j=0; j<length; j++) {
 
                                     lon=trajectory[j].getLongitude();
-                                    lat=trajectory[j].getLongitude();
+                                    lat=trajectory[j].getLatitude();
 
                                     if (Intersects.spatial(envelopeST.getMinX(), envelopeST.getMaxX(), envelopeST.getMinY(), envelopeST.getMaxY(),
                                             lon, lat)
