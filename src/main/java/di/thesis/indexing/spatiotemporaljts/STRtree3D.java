@@ -424,7 +424,11 @@ public class STRtree3D extends STRtree {
                 List ret = new ArrayList();
 
                 for (int ijk = 0; ijk < k; ijk++) {
-                    ret.add(matches.get(ijk));
+                    try {
+                        ret.add(matches.get(ijk));
+                    } catch (IndexOutOfBoundsException e) {
+                        break;
+                    }
                 }
 
                 return ret;
