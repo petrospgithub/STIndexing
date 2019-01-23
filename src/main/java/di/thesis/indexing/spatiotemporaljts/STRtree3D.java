@@ -422,7 +422,11 @@ public class STRtree3D extends STRtree {
 
             matches.sort(Comparator.comparing(Triplet::getDistance));
 
-            return matches.subList(0,k+1);
+
+            if (matches.size() >= k)
+                return matches.subList(0,k);
+            else
+                return null;
         }
     }
 
