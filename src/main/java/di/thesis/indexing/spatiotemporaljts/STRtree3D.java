@@ -401,7 +401,7 @@ public class STRtree3D extends STRtree {
                 }
             }
 
-            if (similarity_function=="DTW") {
+            if (similarity_function=="DTW" || similarity_function.contains("DTW") || similarity_function.equals("dtw")) {
                 DTW dtw = new DTW(traj);
 
                 for (int i=0; i<matches.size(); i++) {
@@ -409,7 +409,7 @@ public class STRtree3D extends STRtree {
                 }
 
 
-            } else if (similarity_function=="LCSS") {
+            } else if (similarity_function=="LCSS" || similarity_function.contains("LCSS") || similarity_function.equals("lcss")) {
                 LCSS lcss= new LCSS(traj);
 
                 for (int i=0; i<matches.size(); i++) {
