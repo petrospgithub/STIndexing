@@ -420,13 +420,17 @@ public class STRtree3D extends STRtree {
                 Assert.shouldNeverReachHere();
             }
 
-            matches.sort(Comparator.comparing(Triplet::getDistance));
+            if (!matches.isEmpty()) {
+                List ret = new ArrayList();
 
+                for (int ijk = 0; ijk < k; ijk++) {
+                    ret.add(matches.get(ijk));
+                }
 
-            if (matches.size() >= k)
-                return matches.subList(0,k);
-            else
+                return ret;
+            } else {
                 return null;
+            }
         }
     }
 
