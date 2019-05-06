@@ -14,7 +14,7 @@ import java.util.*;
 public class STRtreeObjID extends STRtree {
 
     private static final long serialVersionUID = 1113799434508676095L;
-
+/*
     private Envelope datasetMBB;
 
     public Envelope getDatasetEnvelope() {
@@ -32,7 +32,7 @@ public class STRtreeObjID extends STRtree {
     public double normY(double y) {
         return (y - datasetMBB.getMinY()) / (datasetMBB.getMaxY() - datasetMBB.getMaxY());
     }
-
+*/
     public STRtreeObjID() {
     }
 
@@ -40,14 +40,14 @@ public class STRtreeObjID extends STRtree {
         super(nodeCapacity);
     }
 
-
+/*
     //TODO
     protected List createParentBoundables(List childBoundables, int newLevel) {
         Assert.isTrue(!childBoundables.isEmpty());
         int minLeafCount = (int) Math.ceil((childBoundables.size() / (double) getNodeCapacity()));
         ArrayList sortedChildBoundables = new ArrayList(childBoundables);
 
-        //Collections.sort(sortedChildBoundables, xComparator);
+        Collections.sort(sortedChildBoundables, xComparator);
 
         Collections.sort(sortedChildBoundables,
                 Comparator.<Boundable>comparingDouble(arr ->
@@ -97,9 +97,6 @@ public class STRtreeObjID extends STRtree {
         return parentBoundables;
     }
 
-    /**
-     * @param childBoundables Must be sorted by the x-value of the envelope midpoints
-     */
     protected List[] verticalSlices(List childBoundables, int sliceCount) {
         int sliceCapacity = (int) Math.ceil(childBoundables.size() / (double) sliceCount);
         List[] slices = new List[sliceCount];
@@ -115,7 +112,7 @@ public class STRtreeObjID extends STRtree {
         }
         return slices;
     }
-
+*/
     public List queryID(Envelope searchBounds) {
 
         if (super.getRoot().isEmpty()) {
