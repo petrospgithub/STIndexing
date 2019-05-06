@@ -21,7 +21,7 @@ public class STRtreeObjID extends STRtree {
         return datasetMBB;
     }
 
-    public void setDatasetEnvelope(Envelope datasetEnvelope) {
+    public void _b  (Envelope datasetEnvelope) {
         this.datasetMBB = datasetEnvelope;
     }
 

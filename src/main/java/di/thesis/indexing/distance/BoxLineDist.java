@@ -19,15 +19,17 @@ public class BoxLineDist {
 
             double temp=DistanceOp.distance(p,line);
 
-            double temp1=DistanceOp.distance(p,line.getStartPoint());
 
-            double temp2=DistanceOp.distance(p,line.getEndPoint());
 
-            result=Math.min(Math.min(Math.min(result,temp),temp1), temp2);
-
+            //result=Math.min(Math.min(Math.min(result,temp),temp1), temp2);
+            result=Math.min(result,temp);
         }
 
-        return result;
+        double temp1=DistanceOp.distance(line.getStartPoint(),poly);
+
+        double temp2=DistanceOp.distance(line.getEndPoint(), poly);
+
+        return Math.min(Math.min(result,temp1), temp2);
     }
 
 }
